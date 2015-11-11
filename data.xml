@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+	<levelheader>
+		<address>0xF298</address>
+		<size>0x25</size>
+		<levelamount>0x30</levelamount>
+		<tileamount>0x1000</tileamount>
+	</levelheader>
+</data>
