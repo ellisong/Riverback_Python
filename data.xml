@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
-	<levelheader>
+    <tileinfo>
+        <width>8</width>
+        <height>8</height>
+        <bankwidth>128</bankwidth>
+        <bankheight>128</bankheight>
+        <banktileamount>256</banktileamount>
+    </tileinfo>
+	<levelheaderinfo>
 		<address>0xF298</address>
 		<size>0x25</size>
 		<levelamount>0x30</levelamount>
 		<tileamount>0x1000</tileamount>
-	</levelheader>
+	</levelheaderinfo>
 </data>

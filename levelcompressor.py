@@ -13,6 +13,7 @@ class LevelCompressor():
         
         while (tilesWritten < tileamount*3):
             currByte = romdata[pointer]
+            
             pointer += 1
             lzByteList = []
             andbyte = 0x80
@@ -29,6 +30,8 @@ class LevelCompressor():
                 if lzByte == 0:
                     leveldata.append(currByte)
                     tilesWritten += 1
+                    if (tilesWritten >= tileamount*3):
+                        break
                 else:
                     # TODO: possibility: the bytes behind are uncompressed (leveldata[?])
                     totalBytes = ((currByte & 0b11110000) >> 4) + 1
@@ -43,6 +46,9 @@ class LevelCompressor():
                         for yy in behindBuffer:
                             leveldata.append(yy)
                             tilesWritten += 1
+                            if (tilesWritten >= tileamount*3):
+                                xx = totalBytes
+                                break
                             xx += 1
                             if (xx >= totalBytes):
                                 break
