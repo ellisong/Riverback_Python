@@ -2,11 +2,17 @@ from PIL import Image, ImageTk
 
 class ImageEditor():
     def getTileFromTileset(self, image, tileX, tileY, tileWidth, tileHeight):
+        assert(tileX >= 0)
+        assert(tileY >= 0)
+        assert(tileWidth >= 1)
+        assert(tileHeight >= 1)
         return image.crop((tileX*tileWidth, tileY*tileHeight, tileX*tileWidth+tileWidth, tileY*tileHeight+tileHeight))
     
     def getTilesListFromTileset(self, image, tileAmount, tileWidth, tileHeight):
-        if ((tileWidth < 1) or (tileHeight < 1) or (tileAmount < 1) or (image is None)):
-            return
+        assert(tileWidth >= 1)
+        assert(tileHeight >= 1)
+        assert(tileAmount >= 1)
+        
         tiles = []
         x = 0
         y = 0
