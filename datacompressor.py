@@ -1,6 +1,7 @@
 import time
 
 class DataCompressor():
+    #todo: the unique bytes from behind the pointer must have POS bytes in them
     def compress(data):
         compressedData = data[:]
         pointer = 0
@@ -14,6 +15,7 @@ class DataCompressor():
             #if the length is > 8, let the assert in the method throw an error because it should never happen
             if (len(posBitList) >= 8):
                 posByteList.append(DataCompressor.bitsIntoByte(posBitList))
+                print(DataCompressor.bitsIntoByte(posBitList))
                 posBitList.clear()
             for pos in range(0, 16):
                 if (pointer-pos-1 >= 0):
@@ -34,7 +36,7 @@ class DataCompressor():
                 while (len(behindExpanded) < 0x100):
                     for x in range(0, behindLength):
                         behindExpanded.append(behind[x])
-                while (frontLength < 0x100):
+                while (frontLength < 0xFF):
                     if (pointer+frontLength >= len(compressedData)):
                         break
                     front.append(compressedData[pointer+frontLength])
@@ -44,8 +46,12 @@ class DataCompressor():
                         break
                 if (frontLength > 16):
                     posBitList.append(1)
+                    compressedbyte = 0
+                    compressedbyte += 0x10 - behindLength
                     del compressedData[pointer:pointer+frontLength]
-                    compressedData.insert(pointer, frontLength)
+                    compressedData.insert(pointer, compressedbyte)
+                    pointer += 1
+                    compressedData.insert(pointer, frontLength-1)
                     pointer += 1
                 elif (frontLength > 1):
                     posBitList.append(1)
@@ -79,9 +85,9 @@ class DataCompressor():
         writtenData = bytearray()
         for xx in range(0,16):
             writtenData.append(0)
-        tilesWritten = 0
+        endCondition = False
         
-        while (tilesWritten < len(data)):
+        while (not endCondition):
             currByte = data[pointer]
             pointer += 1
             posBitList = []
@@ -97,8 +103,7 @@ class DataCompressor():
                 pointer += 1
                 if posBit == 0:
                     writtenData.append(currByte)
-                    tilesWritten += 1
-                    if (tilesWritten >= len(data)):
+                    if (endCondition):
                         break
                 else:
                     totalBytes = ((currByte & 0b11110000) >> 4) + 1
@@ -109,14 +114,13 @@ class DataCompressor():
                         pointer += 1
                         if (totalBytes == 1):
                             if ((data[pointer] == 0) and (data[pointer+1] == 0)):
-                                tilesWritten = len(data)
+                                endCondition = True
                                 break
                     xx = 0
                     while (xx < totalBytes):
                         for yy in behindBuffer:
                             writtenData.append(yy)
-                            tilesWritten += 1
-                            if (tilesWritten >= len(data)):
+                            if (endCondition):
                                 xx = totalBytes
                             xx += 1
                             if (xx >= totalBytes):
