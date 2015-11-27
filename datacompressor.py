@@ -1,46 +1,56 @@
 import time
 
 class DataCompressor():
-    #todo: the unique bytes from behind the pointer must have POS bytes in them
+    #The compress function is not like the original game's compression algorithm, sometimes optimizing the 
+    #data a little bit better, but right now the data from this algorithm and the original game's algorithm 
+    #decompress into the same uncompressed data
     def compress(data):
-        compressedData = data[:]
+        compressedData = bytearray()
         pointer = 0
         posByteList = []
         posBitList = []
-        while (pointer < len(compressedData)):
+        while (pointer < len(data)):
             behind = []
             behindLength = 0
             front = []
             frontLength = 0
-            #if the length is > 8, let the assert in the method throw an error because it should never happen
             if (len(posBitList) >= 8):
                 posByteList.append(DataCompressor.bitsIntoByte(posBitList))
-                print(DataCompressor.bitsIntoByte(posBitList))
                 posBitList.clear()
+            
             for pos in range(0, 16):
                 if (pointer-pos-1 >= 0):
-                    behind.insert(0, compressedData[pointer-pos-1])
+                    behind.insert(0, data[pointer-pos-1])
                 else:
                     behind.insert(0, 0)
-                if (pointer+pos < len(compressedData)):
-                    front.append(compressedData[pointer+pos])
-                if (front == behind):
-                    frontLength = pos+1
-                    behindLength = pos+1
-            if (behindLength >= 1):
+                    break
+            
+            for pos in range(0, 16):
+                if (pointer+pos < len(data)):
+                    front.append(data[pointer+pos])
+                    indexList = DataCompressor.checkForSublistInList(behind, front)
+                    if indexList:
+                        frontLength = pos+1
+                        behindLength = len(behind) - indexList[0]
+            
+            if (frontLength >= 1):
                 front = front[:frontLength]
-                behind = behind[len(behind)-behindLength:len(behind)]
-                if (behind.count(behind[0]) == len(behind)):
-                    behindLength = 1
-                behindExpanded = []
-                while (len(behindExpanded) < 0x100):
-                    for x in range(0, behindLength):
-                        behindExpanded.append(behind[x])
-                while (frontLength < 0xFF):
-                    if (pointer+frontLength >= len(compressedData)):
+                behind = behind[len(behind)-behindLength:]
+                behindTrimmed = behind[:]
+                while True:
+                    if (len(behindTrimmed) == 1):
                         break
-                    front.append(compressedData[pointer+frontLength])
-                    if (front == behindExpanded[0:frontLength+1]):
+                    behindTrimmed.pop(0)
+                    if (DataCompressor.checkListRepetitionFromSublist(front, behindTrimmed)):
+                        behindLength = len(behindTrimmed)
+                        behind = behindTrimmed
+                #if (behind.count(behind[0]) == behindLength):
+                #   behindLength = 1
+                while (frontLength < 0x100):
+                    if (pointer+frontLength >= len(data)):
+                        break
+                    front.append(data[pointer+frontLength])
+                    if (DataCompressor.checkListRepetitionFromSublist(front, behind)):
                         frontLength += 1
                     else:
                         break
@@ -48,24 +58,23 @@ class DataCompressor():
                     posBitList.append(1)
                     compressedbyte = 0
                     compressedbyte += 0x10 - behindLength
-                    del compressedData[pointer:pointer+frontLength]
-                    compressedData.insert(pointer, compressedbyte)
-                    pointer += 1
-                    compressedData.insert(pointer, frontLength-1)
-                    pointer += 1
+                    compressedData.append(compressedbyte)
+                    compressedData.append(frontLength-1)
+                    pointer += frontLength
                 elif (frontLength > 1):
                     posBitList.append(1)
                     compressedbyte = 0
                     compressedbyte += 0x10 - behindLength
                     compressedbyte += ((frontLength-1 & 0x000F) << 4)
-                    del compressedData[pointer:pointer+frontLength]
-                    compressedData.insert(pointer, compressedbyte)
-                    pointer += 1
+                    compressedData.append(compressedbyte)
+                    pointer += frontLength
                 else:
                     posBitList.append(0)
+                    compressedData.append(data[pointer])
                     pointer += 1
             else:
                 posBitList.append(0)
+                compressedData.append(data[pointer])
                 pointer += 1
         if (len(posBitList) == 8):
             posByteList.append(DataCompressor.bitsIntoByte(posBitList))
@@ -77,7 +86,7 @@ class DataCompressor():
         DataCompressor.insertPosBytesIntoData(compressedData, posByteList)
         return compressedData
     
-    def decompress(data, address):
+    def decompress(data, address=0):
         assert(address >= 0)
         #assert(address + numBytes < len(data))
         
@@ -161,4 +170,25 @@ class DataCompressor():
             if (bitList[x] == 1):
                 myByte += 0x80 >> x
         return myByte
+    
+    def checkListRepetitionFromSublist(list_, sublist):
+        for xx in range(0, len(list_)):
+            if (list_[xx] != sublist[xx % len(sublist)]):
+                return False
+        return True
+        
+    def checkForSublistInList(list_, sublist):
+        indexList = []
+        for xx in range(len(list_) - len(sublist), -1, -1):
+            count = 0
+            for yy in range(0, len(sublist)):
+                if (list_[xx+yy] == sublist[yy]):
+                    count += 1
+                else:
+                    break
+            if (count == len(sublist)):
+                indexList.append(xx)
+        indexList.sort()
+        indexList.reverse()
+        return indexList
         
