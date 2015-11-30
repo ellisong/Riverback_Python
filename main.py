@@ -7,6 +7,9 @@ from dictionary import Dictionary
 from imageeditor import ImageEditor
 from datacompressor import DataCompressor
 
+import sys
+import traceback
+
 
 if __name__ == "__main__":
     TILE_DIMENSION = 8
@@ -55,12 +58,24 @@ if __name__ == "__main__":
     f = open('test.smc', 'rb')
     romdata = f.read()
     f.close()
-    #leveldata = DataCompressor.decompress(romdata, LEVEL_ADDRESS, LEVEL_TILE_AMOUNT*3)
-    data = DataCompressor.decompress(romdata, 0x70000, 1000000, True)
-    print("data length: " + str(len(data)))
-    f = open('data.out', 'w+b')
-    f.write(data)
-    f.close()
+    pos = 0
+    for x in [0x70000, 0x68000, 0x58000, 0x60000, 0x88000, 0x98000, 0x70000, 0x68000, 0x50000, 0x90000, 0xA0000, 0xA4092, 0x80000, 0xAB680]:
+        decomp = DataCompressor.decompress(romdata, x)
+        print("data length decomp: " + str(len(decomp)))
+        f = open('bank'+str(pos//2)+str(pos%2)+'.smc', 'w+b')
+        f.write(decomp)
+        f.close()
+        pos += 1
+    #comp = DataCompressor.compress(decomp)
+    #print("data length comp: " + str(len(comp)))
+    #f = open('compress.out', 'w+b')
+    #f.write(comp)
+    #f.close()
+    #decomp2 = DataCompressor.decompress(comp, 0)
+    #print("data length decomp2: " + str(len(decomp2)))
+    #f = open('decompress2.out', 'w+b')
+    #f.write(decomp2)
+    #f.close()
     
     # posLen = 0
     # if (len(leveldata) % 8 != 0):

@@ -125,6 +125,8 @@ class DataCompressor():
                             if ((data[pointer] == 0) and (data[pointer+1] == 0)):
                                 endCondition = True
                                 break
+                            totalBytes = 256*data[pointer+1] + data[pointer] + 1
+                            pointer += 2
                     xx = 0
                     while (xx < totalBytes):
                         for yy in behindBuffer:
