@@ -11,9 +11,9 @@ class DataCompressor():
         posBitList = []
         while (pointer < len(data)):
             behind = []
-            behindLength = 0
             front = []
-            frontLength = 0
+            lengthCandidates = []
+            lengthResults = []
             if (len(posBitList) >= 8):
                 posByteList.append(DataCompressor.bitsIntoByte(posBitList))
                 posBitList.clear()
@@ -30,43 +30,57 @@ class DataCompressor():
                     front.append(data[pointer+pos])
                     indexList = DataCompressor.checkForSublistInList(behind, front)
                     if indexList:
-                        frontLength = pos+1
-                        behindLength = len(behind) - indexList[0]
+                        lengthCandidates.append((pos+1, len(behind) - indexList[0]))
             
-            if (frontLength >= 1):
-                front = front[:frontLength]
-                behind = behind[len(behind)-behindLength:]
-                behindTrimmed = behind[:]
-                while True:
-                    if (len(behindTrimmed) == 1):
-                        break
-                    behindTrimmed.pop(0)
-                    if (DataCompressor.checkListRepetitionFromSublist(front, behindTrimmed)):
-                        behindLength = len(behindTrimmed)
-                        behind = behindTrimmed
-                #if (behind.count(behind[0]) == behindLength):
-                #   behindLength = 1
-                while (frontLength < 0x100):
-                    if (pointer+frontLength >= len(data)):
-                        break
-                    front.append(data[pointer+frontLength])
-                    if (DataCompressor.checkListRepetitionFromSublist(front, behind)):
-                        frontLength += 1
-                    else:
-                        break
-                if (frontLength > 16):
+            if lengthCandidates:
+                for frontLength, behindLength in lengthCandidates:
+                    frontLengthCandidate = frontLength
+                    frontCandidate = front[:frontLengthCandidate]
+                    behindCandidate = behind[len(behind)-behindLength:]
+                    while (frontLengthCandidate < 0x10000):
+                        if (pointer+frontLengthCandidate >= len(data)):
+                            break
+                        frontCandidate.append(data[pointer+frontLengthCandidate])
+                        if (DataCompressor.checkListRepetitionFromSublist(frontCandidate, behindCandidate)):
+                            frontLengthCandidate += 1
+                        else:
+                            break
+                    lengthResults.append((frontLengthCandidate, behindLength))
+                
+                lengthResults.sort(key=lambda result: result[0], reverse=True)
+                frontLength = (lengthResults[0])[0]
+                behindLength = (lengthResults[0])[1]
+                if (frontLength <= 16):
+                    lengthResults.sort(key=lambda result: 100000*result[0]-result[1], reverse=True)
+                    frontLength = (lengthResults[0])[0]
+                    behindLength = (lengthResults[0])[1]
+                else:
+                    lengthResults.sort(key=lambda result: 100000*result[0]+result[1], reverse=True)
+                    frontLength = (lengthResults[0])[0]
+                    behindLength = (lengthResults[0])[1]
+                
+                if (frontLength > 256):
                     posBitList.append(1)
-                    compressedbyte = 0
-                    compressedbyte += 0x10 - behindLength
-                    compressedData.append(compressedbyte)
+                    compressedByte = 0
+                    compressedByte += 0x10 - behindLength
+                    compressedData.append(compressedByte)
+                    compressedData.append(0)
+                    compressedData.append(frontLength-1 & 0x00FF)
+                    compressedData.append((frontLength-1)//256)
+                    pointer += frontLength
+                elif (frontLength > 16):
+                    posBitList.append(1)
+                    compressedByte = 0
+                    compressedByte += 0x10 - behindLength
+                    compressedData.append(compressedByte)
                     compressedData.append(frontLength-1)
                     pointer += frontLength
                 elif (frontLength > 1):
                     posBitList.append(1)
-                    compressedbyte = 0
-                    compressedbyte += 0x10 - behindLength
-                    compressedbyte += ((frontLength-1 & 0x000F) << 4)
-                    compressedData.append(compressedbyte)
+                    compressedByte = 0
+                    compressedByte += 0x10 - behindLength
+                    compressedByte += ((frontLength-1 & 0x000F) << 4)
+                    compressedData.append(compressedByte)
                     pointer += frontLength
                 else:
                     posBitList.append(0)
@@ -88,7 +102,6 @@ class DataCompressor():
     
     def decompress(data, address=0):
         assert(address >= 0)
-        #assert(address + numBytes < len(data))
         
         pointer = address
         writtenData = bytearray()
@@ -140,10 +153,6 @@ class DataCompressor():
         return writtenData
     
     def insertPosBytesIntoData(data, posByteList):
-        #pointer = 0
-        #for x in range(0, len(posByteList)):
-        #    data.insert(pointer, 0)
-        #    pointer += 9
         pointer = 0
         andbyte = 0x80
         posBitList = []
@@ -161,6 +170,11 @@ class DataCompressor():
                 if (posBit == 1):
                     if ((data[pointer] & 0xF0) == 0):
                         pointer += 1
+                        if (data[pointer] == 0):
+                            pointer += 1
+                            if ((data[pointer] == 0) and (data[pointer+1] == 0)):
+                                return data
+                            pointer += 1
                 pointer += 1
             del posBitList[:]
         return data
@@ -190,7 +204,6 @@ class DataCompressor():
                     break
             if (count == len(sublist)):
                 indexList.append(xx)
-        indexList.sort()
-        indexList.reverse()
+        indexList.sort(reverse=True)
         return indexList
         
