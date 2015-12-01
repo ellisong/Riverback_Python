@@ -1,14 +1,14 @@
 from PIL import Image, ImageTk
 
 class ImageEditor():
-    def getTileFromTileset(self, image, tileX, tileY, tileWidth, tileHeight):
+    def getTileFromTileset(image, tileX, tileY, tileWidth, tileHeight):
         assert(tileX >= 0)
         assert(tileY >= 0)
         assert(tileWidth >= 1)
         assert(tileHeight >= 1)
         return image.crop((tileX*tileWidth, tileY*tileHeight, tileX*tileWidth+tileWidth, tileY*tileHeight+tileHeight))
     
-    def getTilesListFromTileset(self, image, tileAmount, tileWidth, tileHeight):
+    def getTilesListFromTileset(image, tileAmount, tileWidth, tileHeight):
         assert(tileWidth >= 1)
         assert(tileHeight >= 1)
         assert(tileAmount >= 1)
@@ -20,10 +20,10 @@ class ImageEditor():
             for x in range(0, image.width // tileWidth):
                 if len(tiles) >= tileAmount:
                     return tiles
-                tiles.append(self.getTileFromTileset(image, x, y, tileWidth, tileHeight))
+                tiles.append(ImageEditor.getTileFromTileset(image, x, y, tileWidth, tileHeight))
         return tiles
     
-    def createTransposedImage(self, image, horizontal, vertical, rotation):
+    def createTransposedImage(image, horizontal, vertical, rotation):
         img = image
         if horizontal:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
@@ -37,17 +37,17 @@ class ImageEditor():
             img = img.transpose(Image.ROTATE_270)
         return img
     
-    def createTransposedImagesFromList(self, imageList, horizontal, vertical, rotation):
+    def createTransposedImagesFromList(imageList, horizontal, vertical, rotation):
         convertedList = []
         for img in imageList:
-            convertedList.append(self.createTransposedImage(img, horizontal, vertical, rotation))
+            convertedList.append(ImageEditor.createTransposedImage(img, horizontal, vertical, rotation))
         return convertedList
     
-    def convertImageToTkPhotoImage(self, image):
+    def convertImageToTkPhotoImage(image):
         return ImageTk.PhotoImage(image)
     
-    def convertImagesToTkPhotoImage(self, imageList):
+    def convertImagesToTkPhotoImage(imageList):
         convertedList = []
         for img in imageList:
-            convertedList.append(self.convertImageToTkPhotoImage(img))
+            convertedList.append(ImageEditor.convertImageToTkPhotoImage(img))
         return convertedList
