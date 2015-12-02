@@ -1,21 +1,30 @@
+import color
+
 class Palette():
-    colors = []
-    # 0 = 15bit,   1 = 24bit
+    colors = None
+    # False = 15bit,   True = 24bit
     _type = 0
     
-    def __init__(self, type=0):
+    def __init__(self, type=False):
         self._type = type
+        self.colors = []
+    
+    def getColors(self):
+        return self.colors
         
     def getType(self):
         return self._type
     
+    def append(self, color):
+        self.colors.append(color)
+    
     def switchType(self):
-        if (self._type == 0):
-            #15-bit to 24-bit
-            self._type  = 1
-        else:
+        if self._type:
             #24-bit to 15-bit
-            self._type = 0
+            self._type = False
+        else:
+            #15-bit to 24-bit
+            self._type = True
         for col in self.colors:
             col.switchType()
     
