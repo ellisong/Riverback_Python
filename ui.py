@@ -12,19 +12,14 @@ class UI(tk.Frame):
         tk.Frame.__init__(self, master)
         self.pack()
     
-    def createLevelEditorWidgets(self, imgBankTk0, imgBankTk1, levelImgTk):
+    def createLevelEditorWidgets(self, imgBankTk0, levelImgTk):
         self.tilesetFrame = Frame(self)
         self.tilesetFrame.pack(side="left")
         
         self.imgBankTk0 = imgBankTk0
-        self.imgBankCanvas0 = tk.Canvas(self.tilesetFrame, width=128, height=128)
+        self.imgBankCanvas0 = tk.Canvas(self.tilesetFrame, width=imgBankTk0.width(), height=imgBankTk0.height())
         self.imgBankCanvas0.create_image(0, 0, anchor=tk.NW, image=self.imgBankTk0)
         self.imgBankCanvas0.pack(side="top", expand=True)
-        
-        self.imgBankTk1 = imgBankTk1
-        self.imgBankCanvas1 = tk.Canvas(self.tilesetFrame, width=128, height=128)
-        self.imgBankCanvas1.create_image(0, 0, anchor=tk.NW, image=self.imgBankTk1)
-        self.imgBankCanvas1.pack(side="bottom", expand=True)
         
         self.levelImgTk = levelImgTk
         self.levelCanvas = tk.Canvas(self, width=512, height=512)

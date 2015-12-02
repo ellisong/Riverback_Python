@@ -23,13 +23,12 @@
 	</levelheader>
     <level>
         <tileamount>4096</tileamount>
-        <tileamountsize>2</tileamountsize>
         <tileindexsize>256</tileindexsize>
-        <paletteindexamount>7</paletteindexamount>
+        <paletteindexamount>6</paletteindexamount>
     </level>
     <editortileset>
-        <tileamount_width>8</tileamount_width>
-        <tileamount_height>32</tileamount_height>
+        <tileamount_width>16</tileamount_width>
+        <tileamount_height>64</tileamount_height>
         <imagescaling>1</imagescaling>
     </editortileset>
     <editorcanvas>

@@ -184,6 +184,27 @@ class DataCompressor():
                 myByte += 0x80 >> x
         return myByte
     
+    def byteListIntoBitList(byteList, leftToRight=True):
+        bitList = []
+        for byteValue in byteList:
+            if leftToRight:
+                andbyte = 0x80
+                for xx in range(0,8):
+                    posBit = byteValue & andbyte
+                    if (posBit > 0):
+                        posBit = 1
+                    andbyte = andbyte >> 1
+                    bitList.append(posBit)
+            else:
+                andbyte = 0x01
+                for xx in range(0,8):
+                    posBit = byteValue & andbyte
+                    if (posBit > 0):
+                        posBit = 1
+                    andbyte = andbyte << 1
+                    bitList.append(posBit)
+        return bitList
+    
     def checkListRepetitionFromSublist(list_, sublist):
         for xx in range(0, len(list_)):
             if (list_[xx] != sublist[xx % len(sublist)]):
