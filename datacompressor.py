@@ -1,9 +1,6 @@
 import time
 
 class DataCompressor():
-    #The compress function is not like the original game's compression algorithm, sometimes optimizing the 
-    #data a little bit better, but right now the data from this algorithm and the original game's algorithm 
-    #decompress into the same uncompressed data
     def compress(data):
         compressedData = bytearray()
         pointer = 0
@@ -102,7 +99,7 @@ class DataCompressor():
     
     def decompress(data, address=0):
         assert(address >= 0)
-        
+        assert(address < len(data))
         pointer = address
         writtenData = bytearray()
         for xx in range(0,16):
@@ -206,4 +203,13 @@ class DataCompressor():
                 indexList.append(xx)
         indexList.sort(reverse=True)
         return indexList
-        
+    
+    def convertSnesPointer(bank, pointer):
+        return ((bank - 0x80)*0x8000) + (pointer - 0x8000)
+    
+    def readSnesPointer(data, offset):
+        assert(offset+2 < len(data))
+        bank = data[offset+2]
+        pointer = data[offset+1]*0x100
+        pointer += data[offset]
+        return DataCompressor.convertSnesPointer(bank, pointer)
