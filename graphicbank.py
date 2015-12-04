@@ -14,12 +14,39 @@ class GraphicBank():
     EDITOR_TILESET_WIDTH = 16
     EDITOR_TILESET_HEIGHT = 64
     
+    COLORS_HARDCODED_1 = [Color(25, 33, 16, True), Color(33, 41, 25, True), 
+                          Color(41, 49, 33, True), Color(49, 58, 41, True), 
+                          Color(58, 66, 49, True), Color(66, 74, 58, True), 
+                          Color(74, 82, 66, True), Color(82, 90, 74, True),
+                          Color(90, 99, 82, True), Color(99, 107, 90, True), 
+                          Color(107, 115, 99, True), Color(115, 123, 107, True),
+                          Color(123, 132, 115, True), Color(132, 140, 123, True), 
+                          Color(140, 148, 132, True), Color(148, 156, 140, True)]
+    
+    COLORS_HARDCODED_2 = [Color(66, 99, 0, True), Color(49, 49, 82, True), 
+                          Color(239, 230, 255, True), Color(214, 156, 255, True),
+                          Color(66, 99, 0, True), Color(82, 49, 49, True), 
+                          Color(255, 107, 140, True), Color(255, 49, 107, True),
+                          Color(66, 99, 0, True), Color(49, 74, 49, True), 
+                          Color(230, 255, 132, True), Color(189, 255, 0, True),
+                          Color(66, 99, 0, True), Color(214, 82, 148, True), 
+                          Color(255, 148, 206, True), Color(247, 230, 255, True)]
+    
     def __init__(self, data=[], hasPalettes=False):
         self.data = data
         self.bankHasPalettes = hasPalettes
         self.palettes = None
         if ((self.bankHasPalettes) and (data is not None)):
             self.palettes = self.getPalettesFromBankData()
+            # two hardcoded palettes, not sure where they are in ROM yet 
+            # or why they are part of tilemap's palette selection
+            hardcodedPalette1 = Palette(True)
+            hardcodedPalette2 = Palette(True)
+            for x in range(0, GraphicBank.PALETTE_COLOR_AMOUNT):
+                hardcodedPalette1.append(GraphicBank.COLORS_HARDCODED_1[x])
+                hardcodedPalette2.append(GraphicBank.COLORS_HARDCODED_2[x])
+            self.palettes.append(hardcodedPalette1)
+            self.palettes.append(hardcodedPalette2)
         self.image = None
         self.tileAmount = 1024
         self.createImage()
@@ -29,7 +56,7 @@ class GraphicBank():
     
     def setPalettes(self, palettes):
         self.palettes = palettes
-        #quick hack to change color 0 to be consistent across palettes
+        #quick hack to change color 0 to be consistent across palettes (for transparency reasons)
         for pal in self.palettes:
             pal.getColors()[0].red = 96
             pal.getColors()[0].green = 96

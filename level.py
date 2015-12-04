@@ -78,6 +78,6 @@ class Level():
     def setPaletteIndex(self, leveldata):
         offset = (Level.LEVEL_TILE_AMOUNT * 3) + 2 + Level.LEVEL_TILE_INDEX_SIZE
         self.paletteIndex = leveldata[offset : offset + Level.LEVEL_PALETTE_INDEX_AMOUNT]
-        while (len(self.paletteIndex) < 8):
-            self.paletteIndex.insert(0, 0)
+        self.paletteIndex.insert(0, 7)
+        self.paletteIndex.insert(0, 8)
     
