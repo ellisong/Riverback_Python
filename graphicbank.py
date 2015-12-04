@@ -7,42 +7,33 @@ from palette import Palette
 from color import Color
 
 class GraphicBank():
-    tileWidth = 0
-    tileHeight = 0
-    tileAmount = 0
-    paletteAmount = 0
-    paletteColorAmount = 0
-    editorTilesetWidth = 0
-    editorTilesetHeight = 0
-    bankHasPalettes = False
+    TILE_WIDTH = 8
+    TILE_HEIGHT = 8
+    PALETTE_AMOUNT = 15
+    PALETTE_COLOR_AMOUNT = 16
+    EDITOR_TILESET_WIDTH = 16
+    EDITOR_TILESET_HEIGHT = 64
     
-    data = []
-    palettes = []
-    image = None
-    
-    def __init__(self, treeRoot=None, data=None, hasPalettes=False):
-        if treeRoot is not None:
-            self.readConfig(treeRoot)
+    def __init__(self, data=[], hasPalettes=False):
         self.data = data
         self.bankHasPalettes = hasPalettes
+        self.palettes = None
         if ((self.bankHasPalettes) and (data is not None)):
             self.palettes = self.getPalettesFromBankData()
+        self.image = None
+        self.tileAmount = 1024
         self.createImage()
-    
-    def readConfig(self, treeRoot):
-        self.tileWidth = int(treeRoot.find('tile/width').text)
-        self.tileHeight = int(treeRoot.find('tile/height').text)
-        self.tileAmount = int(treeRoot.find('bank/tileamount').text)
-        self.paletteAmount = int(treeRoot.find('bank/paletteamount').text)
-        self.paletteColorAmount = int(treeRoot.find('palette/coloramount').text)
-        self.editorTilesetWidth = int(treeRoot.find('editortileset/tileamount_width').text)
-        self.editorTilesetHeight = int(treeRoot.find('editortileset/tileamount_height').text)
     
     def setBankHasPalettes(val):
         self.bankHasPalettes = val
     
     def setPalettes(self, palettes):
         self.palettes = palettes
+        #quick hack to change color 0 to be consistent across palettes
+        for pal in self.palettes:
+            pal.getColors()[0].red = 96
+            pal.getColors()[0].green = 96
+            pal.getColors()[0].blue = 96
         
     def getPalettes(self):
         return self.palettes
@@ -60,34 +51,34 @@ class GraphicBank():
         return self.image
     
     def createImage(self):
-        assert(self.tileWidth > 0)
-        assert(self.tileHeight > 0)
+        assert(GraphicBank.TILE_WIDTH > 0)
+        assert(GraphicBank.TILE_HEIGHT > 0)
         assert(self.tileAmount > 0)
-        self.image = Image.new('RGB', (self.editorTilesetWidth * self.tileWidth,
-                                       self.editorTilesetHeight * self.tileHeight))
+        self.image = Image.new('RGB', (GraphicBank.EDITOR_TILESET_WIDTH * GraphicBank.TILE_WIDTH,
+                                       GraphicBank.EDITOR_TILESET_HEIGHT * GraphicBank.TILE_HEIGHT))
     
     def updateImage(self, paletteIndex):
-        assert(self.tileWidth > 0)
-        assert(self.tileHeight > 0)
+        assert(GraphicBank.TILE_WIDTH > 0)
+        assert(GraphicBank.TILE_HEIGHT > 0)
         for tileNumber in range(0, self.tileAmount):
             self.drawTileOnImage(tileNumber, paletteIndex)
         
     def drawTileOnImage(self, tileNumber, paletteIndex):
-        assert(self.tileWidth > 0)
-        assert(self.tileHeight > 0)
+        assert(GraphicBank.TILE_WIDTH > 0)
+        assert(GraphicBank.TILE_HEIGHT > 0)
         assert((tileNumber >= 0) and (tileNumber < self.tileAmount))
         tileimg = self.getTileImage(tileNumber, paletteIndex)
-        self.image.paste(tileimg, (self.tileWidth * (tileNumber % self.editorTilesetWidth), 
-                                   self.tileHeight * (tileNumber // self.editorTilesetWidth)))
+        self.image.paste(tileimg, (GraphicBank.TILE_WIDTH * (tileNumber % GraphicBank.EDITOR_TILESET_WIDTH), 
+                                   GraphicBank.TILE_HEIGHT * (tileNumber // GraphicBank.EDITOR_TILESET_WIDTH)))
     
     def getTileImage(self, tileNumber, paletteIndex):
-        assert(self.tileWidth > 0)
-        assert(self.tileHeight > 0)
+        assert(GraphicBank.TILE_WIDTH > 0)
+        assert(GraphicBank.TILE_HEIGHT > 0)
         assert((tileNumber >= 0) and (tileNumber < self.tileAmount))
         planarTileData = self.getPlanarTileFromBankData(tileNumber)
         linearTileData = ImageEditor.convertPlanarTileToLinearTile(planarTileData)
         coloredTileData = ImageEditor.colorLinearTileWithPalette(linearTileData, self.getPalette(paletteIndex))
-        return ImageEditor.createImageFromColoredLinearTile(coloredTileData, self.tileWidth, self.tileHeight)
+        return ImageEditor.createImageFromColoredLinearTile(coloredTileData, GraphicBank.TILE_WIDTH, GraphicBank.TILE_HEIGHT)
     
     def getPlanarTileFromBankData(self, tileNumber):
         assert(len(self.data) > 0)
@@ -113,13 +104,13 @@ class GraphicBank():
         return (tiles, tileNumber)
     
     def getPalettesFromBankData(self):
-        assert(self.paletteColorAmount > 0)
-        assert(self.paletteAmount > 0)
+        assert(GraphicBank.PALETTE_COLOR_AMOUNT > 0)
+        assert(GraphicBank.PALETTE_AMOUNT > 0)
         paletteList = []
         pointer = 0
-        for palNum in range(0, self.paletteAmount):
+        for palNum in range(0, GraphicBank.PALETTE_AMOUNT):
             pal = Palette(False)
-            for colorNum in range(0, self.paletteColorAmount):
+            for colorNum in range(0, GraphicBank.PALETTE_COLOR_AMOUNT):
                 B = ((self.data[pointer+1] & 0b01111100) >> 2)
                 G = (((self.data[pointer+1] & 0b00000011) << 3) + ((self.data[pointer] & 0b11100000) >> 5))
                 R = self.data[pointer] & 0b00011111
@@ -127,7 +118,7 @@ class GraphicBank():
                 pointer += 2
             pal.switchType()
             paletteList.append(pal)
-        self.palettes = paletteList
+        self.setPalettes(paletteList)
         return self.palettes
     
     def calculateTileOffset(self, bitList, offset=0):

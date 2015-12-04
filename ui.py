@@ -6,10 +6,9 @@ from PIL import Image, ImageTk
 from imageeditor import ImageEditor
 
 class UI(tk.Frame):
-    imagelist = []
-
     def __init__(self, master=None):
         tk.Frame.__init__(self, master)
+        self.imageList = []
         self.pack()
     
     def createLevelEditorWidgets(self, imgBankTk0, levelImgTk):
@@ -37,5 +36,5 @@ class UI(tk.Frame):
     
     def pasteOnLevelCanvas(self, imageTk, x, y):
         img = imageTk
-        self.imagelist.append(img)
+        self.imageList.append(img)
         self.levelCanvas.create_image(x, y, image=img, anchor=tk.NW)

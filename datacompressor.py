@@ -225,12 +225,18 @@ class DataCompressor():
         indexList.sort(reverse=True)
         return indexList
     
+    def readLittleEndian(data, offset):
+        assert(offset >= 0)
+        assert(offset+1 < len(data))
+        value = data[offset+1]*0x100
+        value += data[offset]
+        return value
+    
     def convertSnesPointer(bank, pointer):
         return ((bank - 0x80)*0x8000) + (pointer - 0x8000)
     
     def readSnesPointer(data, offset):
         assert(offset+2 < len(data))
         bank = data[offset+2]
-        pointer = data[offset+1]*0x100
-        pointer += data[offset]
+        pointer = DataCompressor.readLittleEndian(data, offset)
         return DataCompressor.convertSnesPointer(bank, pointer)

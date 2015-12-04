@@ -4,7 +4,7 @@ from math import pow
 from palette import Palette
 from color import Color
 
-class ImageEditor():  
+class ImageEditor():
     def getTileFromTileset(image, tileX, tileY, tileWidth, tileHeight):
         assert(tileX >= 0)
         assert(tileY >= 0)

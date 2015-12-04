@@ -1,5 +1,6 @@
 class Dictionary():
-    dict = {}
+    def __init__(self, dict={}):
+        self.dict = dict
     
     def get(self, key=None):
         if not key:

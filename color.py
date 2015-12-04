@@ -1,16 +1,11 @@
-class Color():
-    red = 0
-    green = 0
-    blue = 0
-    # False = 15bit,   True = 24bit
-    _type = 0
-    
-    def __init__(self, red=0, green=0, blue=0, type=0):
+class Color():   
+    def __init__(self, red=0, green=0, blue=0, type=False):
         self.red = red
         self.green = green
         self.blue = blue
-        self._type = type
-        if self._type:
+        # False = 15bit,   True = 24bit
+        self.__type = type
+        if self.__type:
             self.assert24Bit()
         else:
             self.assert15Bit()
@@ -25,16 +20,16 @@ class Color():
         return self.blue
         
     def getType(self):
-        return self._type
+        return self.__type
     
     def switchType(self):
-        if self._type:
+        if self.__type:
             #24-bit to 15-bit
             self.assert24Bit()
             self.blue = self.blue // 8
             self.green = self.green // 8
             self.red = self.red // 8
-            self._type = False
+            self.__type = False
         else:
             #15-bit to 24-bit
             self.assert15Bit()
@@ -44,10 +39,10 @@ class Color():
             self.green += self.green // 32
             self.blue *= 8
             self.blue += self.blue // 32
-            self._type = True
+            self.__type = True
     
     def get15BitColor(self):
-        if self._type:
+        if self.__type:
             #24-bit to 15-bit
             self.assert24Bit()
             B = self.blue // 8
@@ -59,7 +54,7 @@ class Color():
             return self.blue*1024 + self.green*32 + self.red
     
     def get24BitColor(self):
-        if self._type:
+        if self.__type:
             self.assert24Bit()
             return self.red*0x010000 + self.green*0x0100 + self.blue
         else:
