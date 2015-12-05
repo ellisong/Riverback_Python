@@ -1,12 +1,15 @@
-import xml.etree.ElementTree
 from datacompressor import DataCompressor
 from palette import Palette
 from color import Color
 
 class LevelHeader(): 
-    def __init__(self, levelHeaderAddress=0, levelNumber=0):
-        self.levelHeaderAddress = levelHeaderAddress
+    LEVEL_HEADER_ADDRESS = 0xF298
+    LEVEL_HEADER_SIZE = 37
+    LEVEL_HEADER_AMOUNT = 64
+    
+    def __init__(self, levelNumber=0):
         self.levelNumber = levelNumber
+        self.levelHeaderAddress = self.LEVEL_HEADER_ADDRESS + (self.levelNumber * self.LEVEL_HEADER_SIZE)
         self.levelPointer = 0
         self.graphicsBankIndex = 0
         self.fieldNumber = 0
@@ -20,6 +23,8 @@ class LevelHeader():
     def update(self, romdata):
         assert(self.levelHeaderAddress >= 0)
         assert(self.levelNumber >= 0)
+        #level header amount might be changeable if some level data is moved around
+        assert(self.levelNumber < self.LEVEL_HEADER_AMOUNT)
         self.levelPointer = DataCompressor.readSnesPointer(romdata, self.levelHeaderAddress)
         self.graphicsBankIndex = romdata[self.levelHeaderAddress + 0x03]
         self.fieldNumber = romdata[self.levelHeaderAddress + 0x04]
@@ -32,7 +37,7 @@ class LevelHeader():
         self.enemyType[5] = romdata[self.levelHeaderAddress + 0x0B]
         self.waterHeight = romdata[self.levelHeaderAddress + 0x1C]
         self.waterType = romdata[self.levelHeaderAddress + 0x1D]
-        self.levelTimer = romdata[self.levelHeaderAddress + 0x20] * 0x100 + romdata[self.levelHeaderAddress + 0x1F]
+        self.levelTimer = DataCompressor.readSnesPointer(romdata, self.levelHeaderAddress + 0x1F)
         self.doorExits[0] = romdata[self.levelHeaderAddress + 0x21]
         self.doorExits[1] = romdata[self.levelHeaderAddress + 0x22]
         self.doorExits[2] = romdata[self.levelHeaderAddress + 0x23]
@@ -60,24 +65,24 @@ class Level():
     
     def setPhysmap(self, leveldata):
         offset = 0
-        self.physmap = leveldata[offset : (offset + Level.LEVEL_TILE_AMOUNT)]
+        self.physmap = leveldata[offset : (offset + self.LEVEL_TILE_AMOUNT)]
     
     def setTilemap(self, leveldata):
-        offset = Level.LEVEL_TILE_AMOUNT
-        self.tilemap = leveldata[offset : (offset + Level.LEVEL_TILE_AMOUNT * 2)]
+        offset = self.LEVEL_TILE_AMOUNT
+        self.tilemap = leveldata[offset : (offset + self.LEVEL_TILE_AMOUNT * 2)]
     
     def setTileIndexAmount(self, leveldata):
-        offset = (Level.LEVEL_TILE_AMOUNT * 3)
+        offset = (self.LEVEL_TILE_AMOUNT * 3)
         self.tileIndexAmount = leveldata[offset+1] * 0x100 + leveldata[offset]
     
     def setTileIndex(self, leveldata):
-        offset = (Level.LEVEL_TILE_AMOUNT * 3) + 2
-        tileIndexBytes = leveldata[offset : offset + Level.LEVEL_TILE_INDEX_SIZE]
+        offset = (self.LEVEL_TILE_AMOUNT * 3) + 2
+        tileIndexBytes = leveldata[offset : offset + self.LEVEL_TILE_INDEX_SIZE]
         self.tileIndex = DataCompressor.byteListIntoBitList(tileIndexBytes, False)
     
     def setPaletteIndex(self, leveldata):
-        offset = (Level.LEVEL_TILE_AMOUNT * 3) + 2 + Level.LEVEL_TILE_INDEX_SIZE
-        self.paletteIndex = leveldata[offset : offset + Level.LEVEL_PALETTE_INDEX_AMOUNT]
+        offset = (self.LEVEL_TILE_AMOUNT * 3) + 2 + self.LEVEL_TILE_INDEX_SIZE
+        self.paletteIndex = leveldata[offset : offset + self.LEVEL_PALETTE_INDEX_AMOUNT]
         self.paletteIndex.insert(0, 7)
         self.paletteIndex.insert(0, 8)
     

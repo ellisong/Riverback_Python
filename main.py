@@ -2,14 +2,15 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import xml.etree.ElementTree as ET
 
-from ui import UI
-from dictionary import Dictionary
-from imageeditor import ImageEditor
-from datacompressor import DataCompressor
 from color import Color
-from palette import Palette
+from datacompressor import DataCompressor
+from dictionary import Dictionary
 from graphicbank import GraphicBank
+from imageeditor import ImageEditor
 from level import LevelHeader, Level
+from leveleditor import LevelEditor
+from palette import Palette
+from ui import UI
 
 import sys
 import traceback
@@ -26,19 +27,6 @@ if __name__ == "__main__":
     EDITORTILESET_HEIGHT = 64 * TILE_HEIGHT
     EDITORCANVAS_WIDTH = 64 * TILE_WIDTH
     EDITORCANVAS_HEIGHT = 64 * TILE_HEIGHT
-    LEVEL_TILE_AMOUNT = 4096
-    BANK_AMOUNT = 7
-    # shift and & constants
-    AND_TILE_VFLIP = 0b10000000
-    AND_TILE_VFLIP_SHIFT = 7
-    AND_TILE_HFLIP = 0b01000000
-    AND_TILE_HFLIP_SHIFT = 6
-    AND_TILE_PRIORITY = 0b00100000
-    AND_TILE_PRIORITY_SHIFT = 5
-    AND_TILE_PALETTE = 0b00011100
-    AND_TILE_PALETTE_SHIFT = 2
-    AND_TILE_BANK = 0b00000011
-    AND_TILE_BANK_SHIFT = 0
     
     uiRoot = tk.Tk()
     ui = UI(master=uiRoot)
@@ -48,66 +36,24 @@ if __name__ == "__main__":
     romdata = f.read()
     f.close()
     
-    level = 18
-    level00header = LevelHeader(0xF298+(level*37), 0)
-    level00header.update(romdata)
-    leveldata = DataCompressor.decompress(romdata, level00header.levelPointer)
-    level00 = Level(level00header)
-    level00.update(leveldata)
-    
-    bankPointer = 0x02E80
-    bankAddresses = []
-    for bankNum in range(0, BANK_AMOUNT):
-        bankAddresses.append(DataCompressor.readSnesPointer(romdata, bankPointer+(bankNum*8)))
-        bankAddresses.append(DataCompressor.readSnesPointer(romdata, bankPointer+(bankNum*8)+3))
-    
-    paletteIndex = 15
-    bank0data = DataCompressor.decompress(romdata, bankAddresses[level00header.graphicsBankIndex*2])
-    bank0 = GraphicBank(bank0data, True)
-    bank0.updateImage(paletteIndex)
-    bank1data = DataCompressor.decompress(romdata, bankAddresses[level00header.graphicsBankIndex*2+1])
-    bank1 = GraphicBank(bank1data, False)
-    bank1.setPalettes(bank0.getPalettes())
-    bank1.updateImage(paletteIndex)
-    
-    levelBankData, offset = bank0.getPlanarTilesFromBankData(level00.tileIndex, 0)
-    levelBankData.extend((bank1.getPlanarTilesFromBankData(level00.tileIndex, offset))[0])
-    tileOffset = bank0.calculateTileOffset(level00.tileIndex, 0)
-    levelBank = GraphicBank(levelBankData, False)
-    levelBank.tileAmount = len(levelBankData) // 0x20
-    levelBank.setPalettes(bank0.getPalettes())
-    levelBank.updateImage(paletteIndex)
+    levelNumber = 8
+    levelEditor = LevelEditor()
+    levelEditor.openLevel(romdata, levelNumber)
+    levelEditor.updateGraphicsBanks(romdata)
+    levelEditor.updateLevelBank()
     
     img = Image.new('RGB', (EDITORCANVAS_WIDTH, EDITORCANVAS_HEIGHT))
     imageDict.set('levelImg', img)
     imageDict.set('levelImgTk', ImageEditor.convertImageToTkPhotoImage(img))
         
-    img = levelBank.getImage()
+    img = levelEditor.levelBank.getImage()
     imageDict.set('imgBank0', img)
     imageDict.set('imgBankTk0', ImageEditor.convertImageToTkPhotoImage(img))
 
     ui.createLevelEditorWidgets(imageDict.get('imgBankTk0'), imageDict.get('levelImgTk'))
     
-    x = 0
-    y = 0
-    levelpointer = 0
-    while (levelpointer < level00.LEVEL_TILE_AMOUNT):
-        for y in range(0,512,8):
-            for x in range(0,512,8):
-                tile = level00.tilemap[levelpointer]
-                prop = level00.tilemap[levelpointer+1]
-                levelpointer += 2
-                
-                vflip = ((prop & AND_TILE_VFLIP) >> AND_TILE_VFLIP_SHIFT)
-                hflip = ((prop & AND_TILE_HFLIP) >> AND_TILE_HFLIP_SHIFT)
-                priority = ((prop & AND_TILE_PRIORITY) >> AND_TILE_PRIORITY_SHIFT)
-                palette = ((prop & AND_TILE_PALETTE) >> AND_TILE_PALETTE_SHIFT)
-                bank = ((prop & AND_TILE_BANK) >> AND_TILE_BANK_SHIFT)
-                img = levelBank.getTileImage(tile + (bank*256), level00.paletteIndex[palette]-1)
-                if ((hflip != 0) or (vflip != 0)):
-                    img = ImageEditor.createTransposedImage(img, hflip, vflip, 0)
-                ui.pasteOnLevelCanvas(ImageEditor.convertImageToTkPhotoImage(img), x, y)
-
+    levelEditor.updateEditorCanvasImage(ui)
+    
     ui.mainloop()
     
 

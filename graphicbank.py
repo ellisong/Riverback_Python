@@ -1,5 +1,4 @@
 from PIL import Image, ImageTk
-import xml.etree.ElementTree
 from imageeditor import ImageEditor
 from palette import Palette
 from imageeditor import ImageEditor
@@ -42,9 +41,9 @@ class GraphicBank():
             # or why they are part of tilemap's palette selection
             hardcodedPalette1 = Palette(True)
             hardcodedPalette2 = Palette(True)
-            for x in range(0, GraphicBank.PALETTE_COLOR_AMOUNT):
-                hardcodedPalette1.append(GraphicBank.COLORS_HARDCODED_1[x])
-                hardcodedPalette2.append(GraphicBank.COLORS_HARDCODED_2[x])
+            for x in range(0, self.PALETTE_COLOR_AMOUNT):
+                hardcodedPalette1.append(self.COLORS_HARDCODED_1[x])
+                hardcodedPalette2.append(self.COLORS_HARDCODED_2[x])
             self.palettes.append(hardcodedPalette1)
             self.palettes.append(hardcodedPalette2)
         self.image = None
@@ -78,34 +77,34 @@ class GraphicBank():
         return self.image
     
     def createImage(self):
-        assert(GraphicBank.TILE_WIDTH > 0)
-        assert(GraphicBank.TILE_HEIGHT > 0)
+        assert(self.TILE_WIDTH > 0)
+        assert(self.TILE_HEIGHT > 0)
         assert(self.tileAmount > 0)
-        self.image = Image.new('RGB', (GraphicBank.EDITOR_TILESET_WIDTH * GraphicBank.TILE_WIDTH,
-                                       GraphicBank.EDITOR_TILESET_HEIGHT * GraphicBank.TILE_HEIGHT))
+        self.image = Image.new('RGB', (self.EDITOR_TILESET_WIDTH * self.TILE_WIDTH,
+                                       self.EDITOR_TILESET_HEIGHT * self.TILE_HEIGHT))
     
     def updateImage(self, paletteIndex):
-        assert(GraphicBank.TILE_WIDTH > 0)
-        assert(GraphicBank.TILE_HEIGHT > 0)
+        assert(self.TILE_WIDTH > 0)
+        assert(self.TILE_HEIGHT > 0)
         for tileNumber in range(0, self.tileAmount):
             self.drawTileOnImage(tileNumber, paletteIndex)
         
     def drawTileOnImage(self, tileNumber, paletteIndex):
-        assert(GraphicBank.TILE_WIDTH > 0)
-        assert(GraphicBank.TILE_HEIGHT > 0)
+        assert(self.TILE_WIDTH > 0)
+        assert(self.TILE_HEIGHT > 0)
         assert((tileNumber >= 0) and (tileNumber < self.tileAmount))
         tileimg = self.getTileImage(tileNumber, paletteIndex)
-        self.image.paste(tileimg, (GraphicBank.TILE_WIDTH * (tileNumber % GraphicBank.EDITOR_TILESET_WIDTH), 
-                                   GraphicBank.TILE_HEIGHT * (tileNumber // GraphicBank.EDITOR_TILESET_WIDTH)))
+        self.image.paste(tileimg, (self.TILE_WIDTH * (tileNumber % self.EDITOR_TILESET_WIDTH), 
+                                   self.TILE_HEIGHT * (tileNumber // self.EDITOR_TILESET_WIDTH)))
     
     def getTileImage(self, tileNumber, paletteIndex):
-        assert(GraphicBank.TILE_WIDTH > 0)
-        assert(GraphicBank.TILE_HEIGHT > 0)
+        assert(self.TILE_WIDTH > 0)
+        assert(self.TILE_HEIGHT > 0)
         assert((tileNumber >= 0) and (tileNumber < self.tileAmount))
         planarTileData = self.getPlanarTileFromBankData(tileNumber)
         linearTileData = ImageEditor.convertPlanarTileToLinearTile(planarTileData)
         coloredTileData = ImageEditor.colorLinearTileWithPalette(linearTileData, self.getPalette(paletteIndex))
-        return ImageEditor.createImageFromColoredLinearTile(coloredTileData, GraphicBank.TILE_WIDTH, GraphicBank.TILE_HEIGHT)
+        return ImageEditor.createImageFromColoredLinearTile(coloredTileData, self.TILE_WIDTH, self.TILE_HEIGHT)
     
     def getPlanarTileFromBankData(self, tileNumber):
         assert(len(self.data) > 0)
@@ -131,13 +130,13 @@ class GraphicBank():
         return (tiles, tileNumber)
     
     def getPalettesFromBankData(self):
-        assert(GraphicBank.PALETTE_COLOR_AMOUNT > 0)
-        assert(GraphicBank.PALETTE_AMOUNT > 0)
+        assert(self.PALETTE_COLOR_AMOUNT > 0)
+        assert(self.PALETTE_AMOUNT > 0)
         paletteList = []
         pointer = 0
-        for palNum in range(0, GraphicBank.PALETTE_AMOUNT):
+        for palNum in range(0, self.PALETTE_AMOUNT):
             pal = Palette(False)
-            for colorNum in range(0, GraphicBank.PALETTE_COLOR_AMOUNT):
+            for colorNum in range(0, self.PALETTE_COLOR_AMOUNT):
                 B = ((self.data[pointer+1] & 0b01111100) >> 2)
                 G = (((self.data[pointer+1] & 0b00000011) << 3) + ((self.data[pointer] & 0b11100000) >> 5))
                 R = self.data[pointer] & 0b00011111
