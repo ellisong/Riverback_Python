@@ -1,2 +1,2 @@
 # Riverback
-ROM Editor for Umihara Kawase
+An editor for Umihara Kawase
